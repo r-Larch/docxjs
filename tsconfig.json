@@ -2,10 +2,12 @@
   "compilerOptions": {
     "module": "ES2022",
     "moduleResolution": "bundler",
+    "forceConsistentCasingInFileNames": true,
     "declaration": false,
     "noImplicitAny": false,
     "noEmitOnError": true,
     "pretty": true,
+    "strict": false,
     "removeComments": true,
     "preserveConstEnums": true,
     "sourceMap": true,
