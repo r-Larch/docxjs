@@ -912,6 +912,11 @@ section.${c}>footer { z-index: 1; }
 		this.renderStyleValues(elem.cssStyle, result);
 		this.renderCommonProperties(result.style, elem);
 
+		// apply run font-size to ensure correct line-height
+		if (elem.runProps && elem.runProps.fontSize) {
+			result.style.fontSize = elem.runProps.fontSize;
+		}
+
 		const numbering = elem.numbering ?? style?.paragraphProps?.numbering;
 
 		if (numbering) {
