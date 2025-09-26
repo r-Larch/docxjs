@@ -912,7 +912,7 @@ section.${c}>footer { z-index: 1; }
 		this.renderStyleValues(elem.cssStyle, result);
 		this.renderCommonProperties(result.style, elem);
 
-		// apply run font-size to ensure correct line-height
+		// apply run font-size to ensure correct line-height -> same as word > export to html
 		if (elem.runProps && elem.runProps.fontSize) {
 			result.style.fontSize = elem.runProps.fontSize;
 		}
