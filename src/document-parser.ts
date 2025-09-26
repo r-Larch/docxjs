@@ -552,6 +552,12 @@ export class DocumentParser {
 			}
 		}
 
+		// ensure a empty paragraph ocupies the line-height space
+		if (result.children.length == 0) {
+			if (result.cssStyle) result.cssStyle['text-decoration'] = 'none';
+			result.children.push(<WmlText>{ type: DomType.Text, text: "\u00A0" });
+		}
+
 		return result;
 	}
 
@@ -574,7 +580,7 @@ export class DocumentParser {
 					break;
 
 				case "rPr":
-					//TODO ignore
+					//TODO ignore - gets handled in parseParagraphProperty
 					break;
 
 				default:
