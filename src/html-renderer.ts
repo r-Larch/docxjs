@@ -10,7 +10,7 @@ import { CommonProperties } from './document/common';
 import { Options } from './docx-preview';
 import { DocumentElement } from './document/document';
 import { WmlParagraph } from './document/paragraph';
-import { asArray, encloseFontFamily, escapeClassName, isString, keyBy, mergeDeep } from './utils';
+import { asArray, encloseFontFamily, escapeClassName, formatCssRules, isString, keyBy, mergeDeep } from './utils';
 import { computePixelToPoint, updateTabStop } from './javascript';
 import { FontTablePart } from './font-table/font-table';
 import { FooterHeaderReference, SectionProperties } from './document/section';
@@ -1263,7 +1263,7 @@ section.${c}>footer { z-index: 1; }
 	renderVmlElement(elem: VmlElement): SVGElement {
 		var container = this.createSvgElement("svg");
 
-		container.setAttribute("style", elem.cssStyleText);
+		container.setAttribute("style", elem.cssStyle ? formatCssRules(elem.cssStyle) : "");
 
 		const result = this.renderVmlChildElement(elem);
 

@@ -7,7 +7,6 @@ import { formatCssRules, parseCssRules } from '../utils';
 export class VmlElement extends OpenXmlElementBase {
 	type: DomType = DomType.VmlElement;
 	tagName: string;
-	cssStyleText?: string;
 	attrs: Record<string, string> = {};
 	wrapType?: string;
 	imageHref?: {
@@ -50,7 +49,20 @@ export function parseVmlElement(elem: Element, parser: DocumentParser): VmlEleme
 	for (const at of xml.attrs(elem)) {
 		switch(at.localName) {
 			case "style": 
-				result.cssStyleText = at.value;
+				result.cssStyle = parseCssRules(at.value || '');
+				// convert mso position page relative position to absolute page relative position
+				if (result.cssStyle['mso-position-horizontal-relative'] === 'page') {
+					result.cssStyle['position'] = 'absolute';
+					result.cssStyle['left'] = result.cssStyle['mso-position-horizontal'] || '0';
+					delete result.cssStyle['mso-position-horizontal-relative'];
+					delete result.cssStyle['mso-position-horizontal'];
+				}
+				if (result.cssStyle['mso-position-vertical-relative'] === 'page') {
+					result.cssStyle['position'] = 'absolute';
+					result.cssStyle['top'] = result.cssStyle['mso-position-vertical'] || '0';
+					delete result.cssStyle['mso-position-vertical-relative'];
+					delete result.cssStyle['mso-position-vertical'];
+				}
 				break;
 
 			case "fillcolor": 

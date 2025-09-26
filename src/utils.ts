@@ -80,7 +80,7 @@ export function parseCssRules(text: string): Record<string, string> {
 }
 
 export function formatCssRules(style: Record<string, string>): string {
-	return Object.entries(style).map((k, v) => `${k}: ${v}`).join(';');
+	return Object.entries(style).map(([k, v], i) => `${k}: ${v}`).join(';');
 }
 
 export function asArray<T>(val: T | T[]): T[] {
