@@ -524,7 +524,8 @@ export class HtmlRenderer {
 			wrapperStyle = `@media not print { ${wrapperStyle} }`;
 		}
 		var styleText = `${wrapperStyle}
-.${c} { color: black; hyphens: auto; text-underline-position: from-font; }
+.${c} { color: black; hyphens: auto; text-underline-position: from-font; vertical-align: text-bottom; }
+.${c} *, .${c} *:before { vertical-align: inherit; }
 section.${c} { box-sizing: border-box; display: flex; flex-flow: column nowrap; position: relative; overflow: hidden; }
 section.${c}>article { margin-bottom: auto; z-index: 1; }
 section.${c}>footer { z-index: 1; }
