@@ -40,6 +40,7 @@ export function parseVmlElement(elem: Element, parser: DocumentParser): VmlEleme
 		case "textbox":
 			result.tagName = "foreignObject"; 
 			Object.assign(result.attrs, { width: '100%', height: '100%' });
+			result.attrs.class = (result.attrs.class ? result.attrs.class + " " : "") + "textbox";
 			break;
 	
 		default:

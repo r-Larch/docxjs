@@ -535,6 +535,7 @@ section.${c}>footer { z-index: 1; }
 .${c} span { white-space: pre-wrap; overflow-wrap: break-word; }
 .${c} a { color: inherit; text-decoration: inherit; }
 .${c} svg { fill: transparent; }
+.${c} .textbox p { font-size: 10pt; line-height: 1.1; min-height: initial; }
 `;
 
 		if (this.options.renderComments) {
