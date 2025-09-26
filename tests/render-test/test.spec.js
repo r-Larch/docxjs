@@ -40,6 +40,12 @@ describe("Render document", function () {
           if(diff.removed)
             console.log('[-] ' + diff.value);
         }
+
+        // console.log('---');
+        // console.log('Expected:\n' + expected);
+        // console.log('---');
+        // console.log('Actual:\n' + actual);
+        // console.log('Actual RAW:\n' + div.innerHTML);
       }
 
       div.remove();

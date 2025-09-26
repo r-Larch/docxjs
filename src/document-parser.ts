@@ -552,10 +552,16 @@ export class DocumentParser {
 			}
 		}
 
-		// ensure a empty paragraph ocupies the line-height space
+		// ensure a empty paragraph ocupies the line-height space -> same as word > export to html
 		if (result.children.length == 0) {
-			if (result.cssStyle) result.cssStyle['text-decoration'] = 'none';
-			result.children.push(<WmlText>{ type: DomType.Text, text: "\u00A0" });
+			if (result.cssStyle && result.cssStyle['text-decoration']) result.cssStyle['text-decoration'] = 'none';
+			result.children.push(<WmlRun>{
+				type: DomType.Run,
+				...result.runProps,
+				children: [
+					<WmlText>{ type: DomType.Text, text: "\u00A0" }
+				]
+			});
 		}
 
 		return result;
