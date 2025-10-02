@@ -700,7 +700,7 @@ section.${c}>footer { z-index: 1; }
 					selector += ` ${subStyle.target}`;
 
 				if (defautStyles[style.target] == style)
-					selector = `.${this.className} ${style.target}, ` + selector;
+					selector = `.${this.className} ${subStyle.target}, ` + selector;
 
 				styleText += this.styleToString(selector, subStyle.values);
 			}
