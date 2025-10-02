@@ -2967,7 +2967,6 @@
             styleContainer.appendChild(this.createStyleElement(cssText));
         }
         renderFontTable(fontsPart, styleContainer) {
-            const fonts = [];
             for (let f of fontsPart.fonts) {
                 for (let ref of f.embedFontRefs) {
                     this.tasks.push(this.document.loadFont(ref.id, ref.key).then(fontData => {
@@ -2986,27 +2985,6 @@
                         styleContainer.appendChild(this.createStyleElement(cssText));
                     }));
                 }
-                if (f.embedFontRefs.length == 0 && !/Times New Roman/i.test(f.name)) {
-                    fonts.push(f.name);
-                    const names = f.altName ? f.altName.split(',').map(x => x.trim()).filter(x => x.length > 0) : [];
-                    names.unshift(f.name);
-                    const cssValues = {
-                        'font-family': encloseFontFamily(f.name),
-                        'src': names.concat(names.map(_ => `${_} Regular`)).map(n => `local('${n}')`).join(',')
-                    };
-                    const cssText = this.styleToString("@font-face", cssValues);
-                    styleContainer.appendChild(this.createComment(`docxjs ${f.name} font`));
-                    styleContainer.appendChild(this.createStyleElement(cssText));
-                }
-            }
-            if (fonts.length > 0) {
-                const query = fonts.map(f => `family=${f.replace(/ /g, '+')}`).join('&');
-                const url = `https://fonts.googleapis.com/css2?${query}&display=swap`;
-                styleContainer.appendChild(this.createComment(`docxjs Google fonts: ${fonts.join(', ')}`));
-                const link = this.htmlDocument.createElement("link");
-                link.href = url;
-                link.rel = "stylesheet";
-                styleContainer.appendChild(link);
             }
         }
         processStyleName(className) {
