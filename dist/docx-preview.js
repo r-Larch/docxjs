@@ -95,6 +95,17 @@
         }
         return mergeDeep(target, ...sources);
     }
+    function parseCssRules(text) {
+        const result = {};
+        for (const rule of text.split(';')) {
+            const [key, val] = rule.split(':');
+            result[key] = val;
+        }
+        return result;
+    }
+    function formatCssRules(style) {
+        return Object.entries(style).map(([k, v], i) => `${k}: ${v}`).join(';');
+    }
     function asArray(val) {
         return Array.isArray(val) ? val : [val];
     }
@@ -103,22 +114,14 @@
     }
 
     const ns$1 = {
-        wordml: "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
-        drawingml: "http://schemas.openxmlformats.org/drawingml/2006/main",
-        picture: "http://schemas.openxmlformats.org/drawingml/2006/picture",
-        compatibility: "http://schemas.openxmlformats.org/markup-compatibility/2006",
-        math: "http://schemas.openxmlformats.org/officeDocument/2006/math"
-    };
+        wordml: "http://schemas.openxmlformats.org/wordprocessingml/2006/main"};
     const LengthUsage = {
         Dxa: { mul: 0.05, unit: "pt" },
         Emu: { mul: 1 / 12700, unit: "pt" },
         FontSize: { mul: 0.5, unit: "pt" },
         Border: { mul: 0.125, unit: "pt", min: 0.25, max: 12 },
         Point: { mul: 1, unit: "pt" },
-        Percent: { mul: 0.02, unit: "%" },
-        LineHeight: { mul: 1 / 240, unit: "" },
-        VmlEmu: { mul: 1 / 12700, unit: "" },
-    };
+        Percent: { mul: 0.02, unit: "%" }};
     function convertLength(val, usage = LengthUsage.Dxa) {
         if (val == null || /.+(p[xt]|[%])$/.test(val)) {
             return val;
@@ -179,7 +182,7 @@
             const result = [];
             for (let i = 0, l = elem.childNodes.length; i < l; i++) {
                 let c = elem.childNodes.item(i);
-                if (c.nodeType == 1 && (localName == null || c.localName == localName))
+                if (c.nodeType == Node.ELEMENT_NODE && (localName == null || c.localName == localName))
                     result.push(c);
             }
             return result;
@@ -1228,7 +1231,7 @@
         const trimmed = guidKey.replace(/{|}|-/g, "");
         const numbers = new Array(len);
         for (let i = 0; i < len; i++)
-            numbers[len - i - 1] = parseInt(trimmed.substr(i * 2, 2), 16);
+            numbers[len - i - 1] = parseInt(trimmed.substring(i * 2, i * 2 + 2), 16);
         for (let i = 0; i < 32; i++)
             data[i] = data[i] ^ numbers[i % len];
         return data;
@@ -1277,6 +1280,7 @@
             case "textbox":
                 result.tagName = "foreignObject";
                 Object.assign(result.attrs, { width: '100%', height: '100%' });
+                result.attrs.class = (result.attrs.class ? result.attrs.class + " " : "") + "textbox";
                 break;
             default:
                 return null;
@@ -1284,7 +1288,19 @@
         for (const at of globalXmlParser.attrs(elem)) {
             switch (at.localName) {
                 case "style":
-                    result.cssStyleText = at.value;
+                    result.cssStyle = parseCssRules(at.value || '');
+                    if (result.cssStyle['mso-position-horizontal-relative'] === 'page') {
+                        result.cssStyle['position'] = 'absolute';
+                        result.cssStyle['left'] = result.cssStyle['mso-position-horizontal'] || '0';
+                        delete result.cssStyle['mso-position-horizontal-relative'];
+                        delete result.cssStyle['mso-position-horizontal'];
+                    }
+                    if (result.cssStyle['mso-position-vertical-relative'] === 'page') {
+                        result.cssStyle['position'] = 'absolute';
+                        result.cssStyle['top'] = result.cssStyle['mso-position-vertical'] || '0';
+                        delete result.cssStyle['mso-position-vertical-relative'];
+                        delete result.cssStyle['mso-position-vertical'];
+                    }
                     break;
                 case "fillcolor":
                     result.attrs.fill = at.value;
@@ -1454,7 +1470,7 @@
         }
         parseBodyElements(element) {
             var children = [];
-            for (let elem of globalXmlParser.elements(element)) {
+            for (const elem of globalXmlParser.elements(element)) {
                 switch (elem.localName) {
                     case "p":
                         children.push(this.parseParagraph(elem));
@@ -1474,7 +1490,7 @@
         }
         parseStylesFile(xstyles) {
             var result = [];
-            xmlUtil.foreach(xstyles, n => {
+            for (const n of globalXmlParser.elements(xstyles)) {
                 switch (n.localName) {
                     case "style":
                         result.push(this.parseStyle(n));
@@ -1483,7 +1499,7 @@
                         result.push(this.parseDefaultStyles(n));
                         break;
                 }
-            });
+            }
             return result;
         }
         parseDefaultStyles(node) {
@@ -1494,7 +1510,7 @@
                 basedOn: null,
                 styles: []
             };
-            xmlUtil.foreach(node, c => {
+            for (const c of globalXmlParser.elements(node)) {
                 switch (c.localName) {
                     case "rPrDefault":
                         var rPr = globalXmlParser.element(c, "rPr");
@@ -1513,7 +1529,7 @@
                             });
                         break;
                 }
-            });
+            }
             return result;
         }
         parseStyle(node) {
@@ -1537,7 +1553,7 @@
                     result.target = "span";
                     break;
             }
-            xmlUtil.foreach(node, n => {
+            for (const n of globalXmlParser.elements(node)) {
                 switch (n.localName) {
                     case "basedOn":
                         result.basedOn = globalXmlParser.attr(n, "val");
@@ -1590,7 +1606,7 @@
                     default:
                         this.options.debug && console.warn(`DOCX: Unknown style element: ${n.localName}`);
                 }
-            });
+            }
             return result;
         }
         parseTableStyle(node) {
@@ -1633,7 +1649,7 @@
                     break;
                 default: return [];
             }
-            xmlUtil.foreach(node, n => {
+            for (const n of globalXmlParser.elements(node)) {
                 switch (n.localName) {
                     case "pPr":
                         result.push({
@@ -1658,14 +1674,14 @@
                         });
                         break;
                 }
-            });
+            }
             return result;
         }
-        parseNumberingFile(xnums) {
+        parseNumberingFile(node) {
             var result = [];
             var mapping = {};
             var bullets = [];
-            xmlUtil.foreach(xnums, n => {
+            for (const n of globalXmlParser.elements(node)) {
                 switch (n.localName) {
                     case "abstractNum":
                         this.parseAbstractNumbering(n, bullets)
@@ -1680,7 +1696,7 @@
                         mapping[abstractNumId] = numId;
                         break;
                 }
-            });
+            }
             result.forEach(x => x.id = mapping[x.id]);
             return result;
         }
@@ -1697,13 +1713,13 @@
         parseAbstractNumbering(node, bullets) {
             var result = [];
             var id = globalXmlParser.attr(node, "abstractNumId");
-            xmlUtil.foreach(node, n => {
+            for (const n of globalXmlParser.elements(node)) {
                 switch (n.localName) {
                     case "lvl":
                         result.push(this.parseNumberingLevel(id, n, bullets));
                         break;
                 }
-            });
+            }
             return result;
         }
         parseNumberingLevel(id, node, bullets) {
@@ -1716,7 +1732,7 @@
                 rStyle: {},
                 suff: "tab"
             };
-            xmlUtil.foreach(node, n => {
+            for (const n of globalXmlParser.elements(node)) {
                 switch (n.localName) {
                     case "start":
                         result.start = globalXmlParser.intAttr(n, "val");
@@ -1728,8 +1744,8 @@
                         this.parseDefaultProperties(n, result.rStyle);
                         break;
                     case "lvlPicBulletId":
-                        var id = globalXmlParser.intAttr(n, "val");
-                        result.bullet = bullets.find(x => x?.id == id);
+                        var bulletId = globalXmlParser.intAttr(n, "val");
+                        result.bullet = bullets.find(x => x?.id == bulletId);
                         break;
                     case "lvlText":
                         result.levelText = globalXmlParser.attr(n, "val");
@@ -1744,7 +1760,7 @@
                         result.suff = globalXmlParser.attr(n, "val");
                         break;
                 }
-            });
+            }
             return result;
         }
         parseSdt(node, parser) {
@@ -1809,6 +1825,17 @@
                         break;
                 }
             }
+            if (result.children.length == 0) {
+                if (result.cssStyle && result.cssStyle['text-decoration'])
+                    result.cssStyle['text-decoration'] = 'none';
+                result.children.push({
+                    type: DomType.Run,
+                    ...result.runProps,
+                    children: [
+                        { type: DomType.Text, text: "\u00A0" }
+                    ]
+                });
+            }
             return result;
         }
         parseParagraphProperties(elem, paragraph) {
@@ -1842,13 +1869,13 @@
             var result = { type: DomType.Hyperlink, parent: parent, children: [] };
             result.anchor = globalXmlParser.attr(node, "anchor");
             result.id = globalXmlParser.attr(node, "id");
-            xmlUtil.foreach(node, c => {
+            for (const c of globalXmlParser.elements(node)) {
                 switch (c.localName) {
                     case "r":
                         result.children.push(this.parseRun(c, result));
                         break;
                 }
-            });
+            }
             return result;
         }
         parseSmartTag(node, parent) {
@@ -1859,18 +1886,18 @@
                 result.uri = uri;
             if (element)
                 result.element = element;
-            xmlUtil.foreach(node, c => {
+            for (const c of globalXmlParser.elements(node)) {
                 switch (c.localName) {
                     case "r":
                         result.children.push(this.parseRun(c, result));
                         break;
                 }
-            });
+            }
             return result;
         }
         parseRun(node, parent) {
             var result = { type: DomType.Run, parent: parent, children: [] };
-            xmlUtil.foreach(node, c => {
+            for (let c of globalXmlParser.elements(node)) {
                 c = this.checkAlternateContent(c);
                 switch (c.localName) {
                     case "t":
@@ -1961,7 +1988,7 @@
                         this.parseRunProperties(c, result);
                         break;
                 }
-            });
+            }
             return result;
         }
         parseMathElement(elem) {
@@ -2083,7 +2110,7 @@
                             if (alignNode)
                                 pos.align = alignNode.textContent;
                             if (offsetNode)
-                                pos.offset = xmlUtil.sizeValue(offsetNode, LengthUsage.Emu);
+                                pos.offset = convertLength(offsetNode.textContent, LengthUsage.Emu);
                         }
                         break;
                     case "wrapTopAndBottom":
@@ -2135,27 +2162,39 @@
             var result = { type: DomType.Image, src: "", cssStyle: {} };
             var blipFill = globalXmlParser.element(elem, "blipFill");
             var blip = globalXmlParser.element(blipFill, "blip");
+            var srcRect = globalXmlParser.element(blipFill, "srcRect");
             result.src = globalXmlParser.attr(blip, "embed");
+            if (srcRect) {
+                result.srcRect = [
+                    globalXmlParser.intAttr(srcRect, "l", 0) / 100000,
+                    globalXmlParser.intAttr(srcRect, "t", 0) / 100000,
+                    globalXmlParser.intAttr(srcRect, "r", 0) / 100000,
+                    globalXmlParser.intAttr(srcRect, "b", 0) / 100000,
+                ];
+            }
             var spPr = globalXmlParser.element(elem, "spPr");
             var xfrm = globalXmlParser.element(spPr, "xfrm");
             result.cssStyle["position"] = "relative";
-            for (var n of globalXmlParser.elements(xfrm)) {
-                switch (n.localName) {
-                    case "ext":
-                        result.cssStyle["width"] = globalXmlParser.lengthAttr(n, "cx", LengthUsage.Emu);
-                        result.cssStyle["height"] = globalXmlParser.lengthAttr(n, "cy", LengthUsage.Emu);
-                        break;
-                    case "off":
-                        result.cssStyle["left"] = globalXmlParser.lengthAttr(n, "x", LengthUsage.Emu);
-                        result.cssStyle["top"] = globalXmlParser.lengthAttr(n, "y", LengthUsage.Emu);
-                        break;
+            if (xfrm) {
+                result.rotation = globalXmlParser.intAttr(xfrm, "rot", 0) / 60000;
+                for (var n of globalXmlParser.elements(xfrm)) {
+                    switch (n.localName) {
+                        case "ext":
+                            result.cssStyle["width"] = globalXmlParser.lengthAttr(n, "cx", LengthUsage.Emu);
+                            result.cssStyle["height"] = globalXmlParser.lengthAttr(n, "cy", LengthUsage.Emu);
+                            break;
+                        case "off":
+                            result.cssStyle["left"] = globalXmlParser.lengthAttr(n, "x", LengthUsage.Emu);
+                            result.cssStyle["top"] = globalXmlParser.lengthAttr(n, "y", LengthUsage.Emu);
+                            break;
+                    }
                 }
             }
             return result;
         }
         parseTable(node) {
             var result = { type: DomType.Table, children: [] };
-            xmlUtil.foreach(node, c => {
+            for (const c of globalXmlParser.elements(node)) {
                 switch (c.localName) {
                     case "tr":
                         result.children.push(this.parseTableRow(c));
@@ -2167,18 +2206,18 @@
                         this.parseTableProperties(c, result);
                         break;
                 }
-            });
+            }
             return result;
         }
         parseTableColumns(node) {
             var result = [];
-            xmlUtil.foreach(node, n => {
+            for (const n of globalXmlParser.elements(node)) {
                 switch (n.localName) {
                     case "gridCol":
                         result.push({ width: globalXmlParser.lengthAttr(n, "w") });
                         break;
                 }
-            });
+            }
             return result;
         }
         parseTableProperties(elem, table) {
@@ -2234,16 +2273,17 @@
         }
         parseTableRow(node) {
             var result = { type: DomType.Row, children: [] };
-            xmlUtil.foreach(node, c => {
+            for (const c of globalXmlParser.elements(node)) {
                 switch (c.localName) {
                     case "tc":
                         result.children.push(this.parseTableCell(c));
                         break;
                     case "trPr":
+                    case "tblPrEx":
                         this.parseTableRowProperties(c, result);
                         break;
                 }
-            });
+            }
             return result;
         }
         parseTableRowProperties(elem, row) {
@@ -2269,7 +2309,7 @@
         }
         parseTableCell(node) {
             var result = { type: DomType.Cell, children: [] };
-            xmlUtil.foreach(node, c => {
+            for (const c of globalXmlParser.elements(node)) {
                 switch (c.localName) {
                     case "tbl":
                         result.children.push(this.parseTable(c));
@@ -2281,7 +2321,7 @@
                         this.parseTableCellProperties(c, result);
                         break;
                 }
-            });
+            }
             return result;
         }
         parseTableCellProperties(elem, cell) {
@@ -2318,20 +2358,20 @@
                     transform: "none"
                 }
             };
-            xmlUtil.foreach(elem, c => {
+            for (const c of globalXmlParser.elements(elem)) {
                 if (c.localName === "textDirection") {
                     const direction = globalXmlParser.attr(c, "val");
                     const style = directionMap[direction] || { writingMode: "horizontal-tb" };
                     cell.cssStyle["writing-mode"] = style.writingMode;
                     cell.cssStyle["transform"] = style.transform;
                 }
-            });
+            }
         }
         parseDefaultProperties(elem, style = null, childStyle = null, handler = null) {
             style = style || {};
-            xmlUtil.foreach(elem, c => {
+            for (const c of globalXmlParser.elements(elem)) {
                 if (handler?.(c))
-                    return;
+                    continue;
                 switch (c.localName) {
                     case "jc":
                         style["text-align"] = values.valueOfJc(c);
@@ -2466,7 +2506,7 @@
                             console.warn(`DOCX: Unknown document element: ${elem.localName}.${c.localName}`);
                         break;
                 }
-            });
+            }
             return style;
         }
         parseUnderline(node, style) {
@@ -2559,7 +2599,7 @@
             }
         }
         parseMarginProperties(node, output) {
-            xmlUtil.foreach(node, c => {
+            for (const c of globalXmlParser.elements(node)) {
                 switch (c.localName) {
                     case "left":
                         output["padding-left"] = values.valueOfMargin(c);
@@ -2574,7 +2614,7 @@
                         output["padding-bottom"] = values.valueOfMargin(c);
                         break;
                 }
-            });
+            }
         }
         parseTrHeight(node, output) {
             switch (globalXmlParser.attr(node, "hRule")) {
@@ -2588,7 +2628,7 @@
             }
         }
         parseBorderProperties(node, output) {
-            xmlUtil.foreach(node, c => {
+            for (const c of globalXmlParser.elements(node)) {
                 switch (c.localName) {
                     case "start":
                     case "left":
@@ -2605,18 +2645,11 @@
                         output["border-bottom"] = values.valueOfBorder(c);
                         break;
                 }
-            });
+            }
         }
     }
     const knownColors = ['black', 'blue', 'cyan', 'darkBlue', 'darkCyan', 'darkGray', 'darkGreen', 'darkMagenta', 'darkRed', 'darkYellow', 'green', 'lightGray', 'magenta', 'none', 'red', 'white', 'yellow'];
     class xmlUtil {
-        static foreach(node, cb) {
-            for (var i = 0; i < node.childNodes.length; i++) {
-                let n = node.childNodes[i];
-                if (n.nodeType == Node.ELEMENT_NODE)
-                    cb(n);
-            }
-        }
         static colorAttr(node, attrName, defValue = null, autoColor = 'black') {
             var v = globalXmlParser.attr(node, attrName);
             if (v) {
@@ -2630,9 +2663,6 @@
             }
             var themeColor = globalXmlParser.attr(node, "themeColor");
             return themeColor ? `var(--docx-${themeColor}-color)` : defValue;
-        }
-        static sizeValue(node, type = LengthUsage.Dxa) {
-            return convertLength(node.textContent, type);
         }
     }
     class values {
@@ -3217,7 +3247,8 @@
                 wrapperStyle = `@media not print { ${wrapperStyle} }`;
             }
             var styleText = `${wrapperStyle}
-.${c} { color: black; hyphens: auto; text-underline-position: from-font; }
+.${c} { color: black; hyphens: auto; text-underline-position: from-font; vertical-align: text-bottom; }
+.${c} *, .${c} *:before { vertical-align: inherit; }
 section.${c} { box-sizing: border-box; display: flex; flex-flow: column nowrap; position: relative; overflow: hidden; }
 section.${c}>article { margin-bottom: auto; z-index: 1; }
 section.${c}>footer { z-index: 1; }
@@ -3227,6 +3258,7 @@ section.${c}>footer { z-index: 1; }
 .${c} span { white-space: pre-wrap; overflow-wrap: break-word; }
 .${c} a { color: inherit; text-decoration: inherit; }
 .${c} svg { fill: transparent; }
+.${c} .textbox p { font-size: 10pt; line-height: 1.1; min-height: initial; }
 `;
             if (this.options.renderComments) {
                 styleText += `
@@ -3306,7 +3338,7 @@ section.${c}>footer { z-index: 1; }
                     if (style.target != subStyle.target)
                         selector += ` ${subStyle.target}`;
                     if (defautStyles[style.target] == style)
-                        selector = `.${this.className} ${style.target}, ` + selector;
+                        selector = `.${this.className} ${subStyle.target}, ` + selector;
                     styleText += this.styleToString(selector, subStyle.values);
                 }
             }
@@ -3454,6 +3486,9 @@ section.${c}>footer { z-index: 1; }
             this.renderClass(elem, result);
             this.renderStyleValues(elem.cssStyle, result);
             this.renderCommonProperties(result.style, elem);
+            if (elem.runProps && elem.runProps.fontSize) {
+                result.style.fontSize = elem.runProps.fontSize;
+            }
             const numbering = elem.numbering ?? style?.paragraphProps?.numbering;
             if (numbering) {
                 result.classList.add(this.numberingClass(numbering.id, numbering.level));
@@ -3495,7 +3530,7 @@ section.${c}>footer { z-index: 1; }
                 return null;
             const rng = new Range();
             this.commentHighlight?.add(rng);
-            const result = this.htmlDocument.createComment(`start of comment #${commentStart.id}`);
+            const result = this.createComment(`start of comment #${commentStart.id}`);
             this.later(() => rng.setStart(result, 0));
             this.commentMap[commentStart.id] = rng;
             return result;
@@ -3504,7 +3539,7 @@ section.${c}>footer { z-index: 1; }
             if (!this.options.renderComments)
                 return null;
             const rng = this.commentMap[commentEnd.id];
-            const result = this.htmlDocument.createComment(`end of comment #${commentEnd.id}`);
+            const result = this.createComment(`end of comment #${commentEnd.id}`);
             this.later(() => rng?.setEnd(result, 0));
             return result;
         }
@@ -3518,7 +3553,7 @@ section.${c}>footer { z-index: 1; }
             const commentRefEl = this.createElement("span", { className: `${this.className}-comment-ref` }, ['💬']);
             const commentsContainerEl = this.createElement("div", { className: `${this.className}-comment-popover` });
             this.renderCommentContent(comment, commentsContainerEl);
-            frg.appendChild(this.htmlDocument.createComment(`comment #${comment.id} by ${comment.author} on ${comment.date}`));
+            frg.appendChild(this.createComment(`comment #${comment.id} by ${comment.author} on ${comment.date}`));
             frg.appendChild(commentRefEl);
             frg.appendChild(commentsContainerEl);
             return frg;
@@ -3547,7 +3582,16 @@ section.${c}>footer { z-index: 1; }
         }
         renderImage(elem) {
             let result = this.createElement("img");
+            let transform = elem.cssStyle?.transform;
             this.renderStyleValues(elem.cssStyle, result);
+            if (elem.srcRect && elem.srcRect.some(x => x != 0)) {
+                var [left, top, right, bottom] = elem.srcRect;
+                transform = `scale(${1 / (1 - left - right)}, ${1 / (1 - top - bottom)})`;
+                result.style['clip-path'] = `rect(${(100 * top).toFixed(2)}% ${(100 * (1 - right)).toFixed(2)}% ${(100 * (1 - bottom)).toFixed(2)}% ${(100 * left).toFixed(2)}%)`;
+            }
+            if (elem.rotation)
+                transform = `rotate(${elem.rotation}deg) ${transform ?? ''}`;
+            result.style.transform = transform?.trim();
             if (this.document) {
                 this.tasks.push(this.document.loadDocumentImage(elem.src, this.currentPart).then(x => {
                     result.src = x;
@@ -3559,7 +3603,7 @@ section.${c}>footer { z-index: 1; }
             return this.htmlDocument.createTextNode(elem.text);
         }
         renderDeletedText(elem) {
-            return this.options.renderEndnotes ? this.htmlDocument.createTextNode(elem.text) : null;
+            return this.options.renderChanges ? this.renderText(elem) : null;
         }
         renderBreak(elem) {
             if (elem.break == "textWrapping") {
@@ -3697,7 +3741,7 @@ section.${c}>footer { z-index: 1; }
         }
         renderVmlElement(elem) {
             var container = this.createSvgElement("svg");
-            container.setAttribute("style", elem.cssStyleText);
+            container.setAttribute("style", elem.cssStyle ? formatCssRules(elem.cssStyle) : "");
             const result = this.renderVmlChildElement(elem);
             if (elem.imageHref?.id) {
                 this.tasks.push(this.document?.loadDocumentImage(elem.imageHref.id, this.currentPart)
