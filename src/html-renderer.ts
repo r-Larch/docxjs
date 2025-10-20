@@ -324,7 +324,7 @@ export class HtmlRenderer {
 		}
 
 		return elem;
-	}	
+	}
 
 	renderSections(document: DocumentElement): HTMLElement[] {
 		const result = [];
@@ -334,7 +334,7 @@ export class HtmlRenderer {
 		const pages = this.groupByPageBreaks(sections);
 		let prevProps = null;
 
-		for (let i = 0, l = pages.length; i < l; i++) {			
+		for (let i = 0, l = pages.length; i < l; i++) {
 			this.currentFootnoteIds = [];
 
 			const section = pages[i][0];
@@ -743,7 +743,7 @@ section.${c}>footer { z-index: 1; }
 
 			case DomType.Hyperlink:
 				return this.renderHyperlink(elem);
-			
+
 			case DomType.SmartTag:
 				return this.renderSmartTag(elem);
 
@@ -761,7 +761,7 @@ section.${c}>footer { z-index: 1; }
 
 			case DomType.DeletedText:
 				return this.renderDeletedText(elem as WmlText);
-	
+
 			case DomType.Tab:
 				return this.renderTab(elem);
 
@@ -795,10 +795,10 @@ section.${c}>footer { z-index: 1; }
 
 			case DomType.VmlElement:
 				return this.renderVmlElement(elem as VmlElement);
-	
+
 			case DomType.MmlMath:
 				return this.renderContainerNS(elem, ns.mathML, "math", { xmlns: ns.mathML });
-	
+
 			case DomType.MmlMathParagraph:
 				return this.renderContainer(elem, "span");
 
@@ -806,7 +806,7 @@ section.${c}>footer { z-index: 1; }
 				return this.renderContainerNS(elem, ns.mathML, "mfrac");
 
 			case DomType.MmlBase:
-				return this.renderContainerNS(elem, ns.mathML, 
+				return this.renderContainerNS(elem, ns.mathML,
 					elem.parent.type == DomType.MmlMatrixRow ? "mtd" : "mrow");
 
 			case DomType.MmlNumerator:
@@ -827,7 +827,7 @@ section.${c}>footer { z-index: 1; }
 
 			case DomType.MmlMatrixRow:
 				return this.renderContainerNS(elem, ns.mathML, "mtr");
-	
+
 			case DomType.MmlRadical:
 				return this.renderMmlRadical(elem);
 
@@ -844,7 +844,7 @@ section.${c}>footer { z-index: 1; }
 
 			case DomType.MmlFunctionName:
 				return this.renderContainerNS(elem, ns.mathML, "ms");
-	
+
 			case DomType.MmlDelimiter:
 				return this.renderMmlDelimiter(elem);
 
@@ -859,7 +859,7 @@ section.${c}>footer { z-index: 1; }
 
 			case DomType.MmlBar:
 				return this.renderMmlBar(elem);
-	
+
 			case DomType.MmlEquationArray:
 				return this.renderMllList(elem);
 
@@ -965,11 +965,11 @@ section.${c}>footer { z-index: 1; }
 
 		return result;
 	}
-	
+
 	renderSmartTag(elem: WmlSmartTag) {
 		return this.renderContainer(elem, "span");
 	}
-	
+
 	renderCommentRangeStart(commentStart: WmlCommentRangeStart) {
 		if (!this.options.renderComments)
 			return null;
@@ -1022,7 +1022,7 @@ section.${c}>footer { z-index: 1; }
 			return null;
 
 		var result = this.createElement("iframe");
-		
+
 		this.tasks.push(this.document.loadAltChunk(elem.id, this.currentPart).then(x => {
 			result.srcdoc = x;
 		}));
@@ -1279,7 +1279,7 @@ section.${c}>footer { z-index: 1; }
 		requestAnimationFrame(() => {
 			const bb = (container.firstElementChild as any).getBBox();
 
-			container.setAttribute("width", `${Math.ceil(bb.x +  bb.width)}`);
+			container.setAttribute("width", `${Math.ceil(bb.x + bb.width)}`);
 			container.setAttribute("height", `${Math.ceil(bb.y + bb.height)}`);
 		});
 
@@ -1312,7 +1312,7 @@ section.${c}>footer { z-index: 1; }
 		return this.createElementNS(ns.mathML, "mroot", null, this.renderElements([base, degree]));
 	}
 
-	renderMmlDelimiter(elem: OpenXmlElement): HTMLElement {		
+	renderMmlDelimiter(elem: OpenXmlElement): HTMLElement {
 		const children = [];
 
 		children.push(this.createElementNS(ns.mathML, "mo", null, [elem.props.beginChar ?? '(']));
@@ -1322,7 +1322,7 @@ section.${c}>footer { z-index: 1; }
 		return this.createElementNS(ns.mathML, "mrow", null, children);
 	}
 
-	renderMmlNary(elem: OpenXmlElement): HTMLElement {		
+	renderMmlNary(elem: OpenXmlElement): HTMLElement {
 		const children = [];
 		const grouped = keyBy(elem.children, x => x.type);
 
@@ -1335,9 +1335,9 @@ section.${c}>footer { z-index: 1; }
 
 		if (supElem || subElem) {
 			children.push(this.createElementNS(ns.mathML, "munderover", null, [charElem, subElem, supElem]));
-		} else if(supElem) {
+		} else if (supElem) {
 			children.push(this.createElementNS(ns.mathML, "mover", null, [charElem, supElem]));
-		} else if(subElem) {
+		} else if (subElem) {
 			children.push(this.createElementNS(ns.mathML, "munder", null, [charElem, subElem]));
 		} else {
 			children.push(charElem);
@@ -1378,7 +1378,7 @@ section.${c}>footer { z-index: 1; }
 	renderMmlBar(elem: OpenXmlElement) {
 		const result = this.renderContainerNS(elem, ns.mathML, "mrow");
 
-		switch(elem.props.position) {
+		switch (elem.props.position) {
 			case "top": result.style.textDecoration = "overline"; break
 			case "bottom": result.style.textDecoration = "underline"; break
 		}
@@ -1447,7 +1447,7 @@ section.${c}>footer { z-index: 1; }
 		for (const key in values) {
 			if (key.startsWith('$'))
 				continue;
-			
+
 			result += `  ${key}: ${values[key]};\r\n`;
 		}
 
@@ -1552,12 +1552,12 @@ section.${c}>footer { z-index: 1; }
 	createStyleElement(cssText: string) {
 		return this.createElement("style", { innerHTML: cssText });
 	}
-	
+
 	createComment(text: string) {
 		return this.htmlDocument.createComment(text);
 	}
 
-	later(func: Function) { 
+	later(func: Function) {
 		this.postRenderTasks.push(func);
 	}
 }
