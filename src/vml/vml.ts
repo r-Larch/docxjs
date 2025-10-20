@@ -31,6 +31,7 @@ export function parseVmlElement(elem: Element, parser: DocumentParser): VmlEleme
 	
 		case "line":
 			result.tagName = "line"; 
+			// todo stroke color?
 			break;
 
 		case "shape":
@@ -63,6 +64,18 @@ export function parseVmlElement(elem: Element, parser: DocumentParser): VmlEleme
 					result.cssStyle['top'] = result.cssStyle['mso-position-vertical'] || '0';
 					delete result.cssStyle['mso-position-vertical-relative'];
 					delete result.cssStyle['mso-position-vertical'];
+				}
+				if (result.cssStyle['left'] === 'absolute') {
+					result.cssStyle['left'] = '0';
+				}
+				if (result.cssStyle['top'] === 'absolute') {
+					result.cssStyle['top'] = '0';
+				}
+				if (result.cssStyle['right'] === 'absolute') {
+					result.cssStyle['right'] = '0';
+				}
+				if (result.cssStyle['bottom'] === 'absolute') {
+					result.cssStyle['bottom'] = '0';
 				}
 				break;
 
