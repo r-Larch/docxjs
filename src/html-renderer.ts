@@ -109,7 +109,7 @@ export class HtmlRenderer {
 		}
 
 		if (document.numberingPart) {
-			this.prodessNumberings(document.numberingPart.domNumberings);
+			this.processNumberings(document.numberingPart.domNumberings);
 
 			styleContainer.appendChild(this.createComment("docxjs document numbering styles"));
 			styleContainer.appendChild(this.renderNumbering(document.numberingPart.domNumberings, styleContainer));
@@ -236,7 +236,7 @@ export class HtmlRenderer {
 		return stylesMap;
 	}
 
-	prodessNumberings(numberings: IDomNumbering[]) {
+	processNumberings(numberings: IDomNumbering[]) {
 		for (let num of numberings.filter(n => n.pStyleName)) {
 			const style = this.findStyle(num.pStyleName);
 
@@ -1475,50 +1475,50 @@ section.${c}>footer { z-index: 1; }
 		return `"${result}${suffMap[suff] ?? ""}"`;
 	}
 
-	numFormatToCssValue(format: string) {
-		var mapping = {
-			none: "none",
-			bullet: "disc",
-			decimal: "decimal",
-			lowerLetter: "lower-alpha",
-			upperLetter: "upper-alpha",
-			lowerRoman: "lower-roman",
-			upperRoman: "upper-roman",
-			decimalZero: "decimal-leading-zero", // 01,02,03,...
-			// ordinal: "", // 1st, 2nd, 3rd,...
-			// ordinalText: "", //First, Second, Third, ...
-			// cardinalText: "", //One,Two Three,...
-			// numberInDash: "", //-1-,-2-,-3-, ...
-			// hex: "upper-hexadecimal",
-			aiueo: "katakana",
-			aiueoFullWidth: "katakana",
-			chineseCounting: "simp-chinese-informal",
-			chineseCountingThousand: "simp-chinese-informal",
-			chineseLegalSimplified: "simp-chinese-formal", // 中文大写
-			chosung: "hangul-consonant",
-			ideographDigital: "cjk-ideographic",
-			ideographTraditional: "cjk-heavenly-stem", // 十天干
-			ideographLegalTraditional: "trad-chinese-formal",
-			ideographZodiac: "cjk-earthly-branch", // 十二地支
-			iroha: "katakana-iroha",
-			irohaFullWidth: "katakana-iroha",
-			japaneseCounting: "japanese-informal",
-			japaneseDigitalTenThousand: "cjk-decimal",
-			japaneseLegal: "japanese-formal",
-			thaiNumbers: "thai",
-			koreanCounting: "korean-hangul-formal",
-			koreanDigital: "korean-hangul-formal",
-			koreanDigital2: "korean-hanja-informal",
-			hebrew1: "hebrew",
-			hebrew2: "hebrew",
-			hindiNumbers: "devanagari",
-			ganada: "hangul",
-			taiwaneseCounting: "cjk-ideographic",
-			taiwaneseCountingThousand: "cjk-ideographic",
-			taiwaneseDigital:  "cjk-decimal",
-		};
+	private numFormatMapping = {
+		none: "none",
+		bullet: "disc",
+		decimal: "decimal",
+		lowerLetter: "lower-alpha",
+		upperLetter: "upper-alpha",
+		lowerRoman: "lower-roman",
+		upperRoman: "upper-roman",
+		decimalZero: "decimal-leading-zero", // 01,02,03,...
+		// ordinal: "", // 1st, 2nd, 3rd,...
+		// ordinalText: "", //First, Second, Third, ...
+		// cardinalText: "", //One,Two Three,...
+		// numberInDash: "", //-1-,-2-,-3-, ...
+		// hex: "upper-hexadecimal",
+		aiueo: "katakana",
+		aiueoFullWidth: "katakana",
+		chineseCounting: "simp-chinese-informal",
+		chineseCountingThousand: "simp-chinese-informal",
+		chineseLegalSimplified: "simp-chinese-formal", // 中文大写
+		chosung: "hangul-consonant",
+		ideographDigital: "cjk-ideographic",
+		ideographTraditional: "cjk-heavenly-stem", // 十天干
+		ideographLegalTraditional: "trad-chinese-formal",
+		ideographZodiac: "cjk-earthly-branch", // 十二地支
+		iroha: "katakana-iroha",
+		irohaFullWidth: "katakana-iroha",
+		japaneseCounting: "japanese-informal",
+		japaneseDigitalTenThousand: "cjk-decimal",
+		japaneseLegal: "japanese-formal",
+		thaiNumbers: "thai",
+		koreanCounting: "korean-hangul-formal",
+		koreanDigital: "korean-hangul-formal",
+		koreanDigital2: "korean-hanja-informal",
+		hebrew1: "hebrew",
+		hebrew2: "hebrew",
+		hindiNumbers: "devanagari",
+		ganada: "hangul",
+		taiwaneseCounting: "cjk-ideographic",
+		taiwaneseCountingThousand: "cjk-ideographic",
+		taiwaneseDigital: "cjk-decimal",
+	};
 
-		return mapping[format] ?? format;
+	numFormatToCssValue(format: string) {
+		return this.numFormatMapping[format] ?? format;
 	}
 
 	refreshTabStops() {

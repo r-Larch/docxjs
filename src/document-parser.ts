@@ -177,7 +177,7 @@ export class DocumentParser {
 			styles: []
 		};
 
-		for (const c of xml.elements(node)){
+		for (const c of xml.elements(node)) {
 			switch (c.localName) {
 				case "rPrDefault":
 					var rPr = xml.element(c, "rPr");
@@ -468,6 +468,14 @@ export class DocumentParser {
 					result.suff = xml.attr(n, "val");
 					break;
 			}
+		}
+
+		if (result.pStyle['margin-inline-start'] && result.pStyle['text-indent'].startsWith('-')) {
+			const value = result.pStyle['text-indent'].substring(1);
+			result.rStyle['display'] = 'inline-block';
+			result.rStyle['width'] = value;
+			result.rStyle['text-align'] = 'end';
+			result.rStyle['padding-inline-end'] = `calc(${value} / 2)`;
 		}
 
 		return result;
