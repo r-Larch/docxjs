@@ -9,7 +9,7 @@ const embedFontTypeMap = {
 
 export interface FontDeclaration {
     name: string,
-    altName: string,
+    altName?: string,
     family: string,
     embedFontRefs: EmbedFontRef[];
 }
