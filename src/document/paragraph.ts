@@ -16,7 +16,7 @@ export interface ParagraphProperties extends CommonProperties {
 
     border: Borders;
     textAlignment: "auto" | "baseline" | "bottom" | "center" | "top" | string;
-    lineSpacing: LineSpacing;
+    lineSpacing?: Record<string, string>;
     keepLines: boolean;
     keepNext: boolean;
     pageBreakBefore: boolean;
@@ -67,10 +67,9 @@ export function parseParagraphProperty(elem: Element, props: ParagraphProperties
             props.numbering = parseNumbering(elem, xml);
             break;
         
-        case "spacing":
-            props.lineSpacing = parseLineSpacing(elem, xml);
-            return false; // TODO
-            break;
+        // case "spacing":
+        //     props.lineSpacing = parseLineSpacing(elem, xml);
+        //     break;
 
         case "textAlignment":
             props.textAlignment = xml.attr(elem, "val");

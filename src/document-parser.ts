@@ -572,6 +572,18 @@ export class DocumentParser {
 			});
 		}
 
+
+		let runStyles = result.lineSpacing ?? {};
+		const { color, fontSize } = result.runProps ?? {};
+		if (color) runStyles['color'] = color;
+		if (fontSize) runStyles['font-size'] = fontSize;
+
+		for (const child of result.children) {
+			if (child.type === DomType.Run) {
+				child.cssStyle = { ...runStyles, ...(child.cssStyle || {}) };
+			}
+		}
+
 		return result;
 	}
 
@@ -591,6 +603,10 @@ export class DocumentParser {
 
 				case "framePr":
 					this.parseFrame(c, paragraph);
+					break;
+
+				case "spacing":
+					this.parseSpacing(c, paragraph.lineSpacing ??= {});
 					break;
 
 				case "rPr":
@@ -1509,11 +1525,11 @@ export class DocumentParser {
 					break;
 
 				case "atLeast":
-					style["line-height"] = `calc(100% + ${line / 20}pt)`;
+					style["line-height"] = `calc(100% + ${convertLength(line, LengthUsage.Dxa)})`;
 					break;
 
 				default:
-					style["line-height"] = style["min-height"] = `${line / 20}pt`
+					style["line-height"] = style["min-height"] = `${convertLength(line, LengthUsage.Dxa)}`;
 					break;
 			}
 		}
