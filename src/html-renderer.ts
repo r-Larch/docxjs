@@ -148,6 +148,16 @@ export class HtmlRenderer {
 		await Promise.allSettled(this.tasks);
 
 		this.refreshTabStops();
+
+		// Adjust zoom to fit page width
+		const wrapper = this.options.inWrapper ? bodyContainer.querySelector(`.${this.className}-wrapper`) as HTMLElement : bodyContainer;
+		const docx = bodyContainer.querySelectorAll<HTMLElement>(`.${this.className}`);
+		requestAnimationFrame(function render() {
+			docx.forEach(d => {
+				d.style.zoom = `${Math.min(1, (wrapper.clientWidth - 60) / d.clientWidth).toFixed(2)}`;
+			});
+			requestAnimationFrame(render);
+		})
 	}
 
 	renderTheme(themePart: ThemePart, styleContainer: HTMLElement) {
@@ -204,8 +214,8 @@ export class HtmlRenderer {
 			//  const names = f.altName ? f.altName.split(',').map(x => x.trim()).filter(x => x.length > 0) : [];
 			//  names.unshift(f.name);
 
-				// // const weights = ['Regular', 'Bold', 'Italic', 'BoldItalic', 'Light', 'LightItalic', 'Medium', 'MediumItalic', 'SemiBold', 'SemiBoldItalic', 'Black', 'BlackItalic'];
-				// // const postScriptNames = weights.map(w => names.map(n => `${n}-${w}`).concat(names)).flat();
+			// // const weights = ['Regular', 'Bold', 'Italic', 'BoldItalic', 'Light', 'LightItalic', 'Medium', 'MediumItalic', 'SemiBold', 'SemiBoldItalic', 'Black', 'BlackItalic'];
+			// // const postScriptNames = weights.map(w => names.map(n => `${n}-${w}`).concat(names)).flat();
 			// 	const cssValues = {
 			// 		'font-family': encloseFontFamily(f.name),
 			// 		'src': names.map(n => `local('${n}')`).join(',')
@@ -555,7 +565,7 @@ export class HtmlRenderer {
 		var styleText = `${wrapperStyle}
 .${c} { color: black; hyphens: auto; text-underline-position: from-font; vertical-align: text-bottom; line-height: 1.5; box-sizing: border-box; }
 .${c} *, .${c} *:before { vertical-align: inherit; }
-section.${c} { box-sizing: border-box; display: flex; flex-flow: column nowrap; position: relative; overflow: hidden; }
+section.${c} { box-sizing: border-box; display: flex; flex-flow: column nowrap; position: relative; overflow: hidden; will-change: zoom; }
 section.${c}>article { margin-bottom: auto; z-index: 1; }
 section.${c}>footer { z-index: 1; }
 .${c} table { border-collapse: collapse; }
@@ -1305,12 +1315,11 @@ section.${c}>footer { z-index: 1; }
 
 		container.appendChild(result);
 
-		requestAnimationFrame(() => {
-			const bb = (container.firstElementChild as any).getBBox();
-
-			container.setAttribute("width", `${Math.ceil(bb.x + bb.width)}`);
-			container.setAttribute("height", `${Math.ceil(bb.y + bb.height)}`);
-		});
+		// requestAnimationFrame(() => {
+		// 	const bb = (container.firstElementChild as any).getBBox();
+		// 	container.setAttribute("width", `${Math.ceil(bb.x + bb.width)}`);
+		// 	container.setAttribute("height", `${Math.ceil(bb.y + bb.height)}`);
+		// });
 
 		return container;
 	}
