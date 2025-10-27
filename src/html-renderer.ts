@@ -149,15 +149,38 @@ export class HtmlRenderer {
 
 		this.refreshTabStops();
 
-		// Adjust zoom to fit page width
+		const cleanup = this.setupAutoZoom(bodyContainer);
+
+		return () => {
+			cleanup();
+		};
+	}
+
+	/**
+	 * Adjust zoom to fit page width using ResizeObserver
+	 * @param bodyContainer The body container element
+	 */
+	private setupAutoZoom(bodyContainer: HTMLElement) {
 		const wrapper = this.options.inWrapper ? bodyContainer.querySelector(`.${this.className}-wrapper`) as HTMLElement : bodyContainer;
 		const docx = bodyContainer.querySelectorAll<HTMLElement>(`.${this.className}`);
-		requestAnimationFrame(function render() {
-			docx.forEach(d => {
-				d.style.zoom = `${Math.min(1, (wrapper.clientWidth - 60) / d.clientWidth).toFixed(2)}`;
-			});
-			requestAnimationFrame(render);
-		})
+
+		const updateZoom = () => {
+			docx.forEach(d => d.style.zoom = `${Math.min(1, (wrapper.clientWidth - 60) / d.clientWidth).toFixed(3)}`);
+		};
+
+		// Initial zoom adjustment
+		updateZoom();
+
+		// Set up ResizeObserver to watch for wrapper size changes
+		if (typeof ResizeObserver !== 'undefined') {
+			const resizeObserver = new ResizeObserver(updateZoom);
+			resizeObserver.observe(wrapper);
+			return () => resizeObserver.disconnect();
+		} else {
+			// Fallback for browsers that don't support ResizeObserver
+			console.warn('ResizeObserver not supported, auto-zoom may not work optimally');
+			return () => { };
+		}
 	}
 
 	renderTheme(themePart: ThemePart, styleContainer: HTMLElement) {
@@ -329,6 +352,7 @@ export class HtmlRenderer {
 	}
 
 	createPageElement(className: string, props: SectionProperties): HTMLElement {
+		// TODO use `zoom: <float>` to scale to fit page size into available space
 		var elem = this.createElement("section", { className });
 
 		if (props) {

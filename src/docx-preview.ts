@@ -47,20 +47,25 @@ export const defaultOptions: Options = {
 }
 
 export type WordDocument = _WordDocument;
+export type CleanupFn = () => void;
+export type RenderedDocument = {
+    document: WordDocument,
+    cleanup: CleanupFn
+};
 
-export function parseAsync(data: Blob | any, userOptions?: Partial<Options>): Promise<_WordDocument> {
+export function parseAsync(data: Blob | any, userOptions?: Partial<Options>): Promise<WordDocument> {
     const ops = { ...defaultOptions, ...userOptions };
     return _WordDocument.load(data, new DocumentParser(ops), ops);
 }
 
-export async function renderDocument(document: WordDocument, bodyContainer: HTMLElement, styleContainer?: HTMLElement, userOptions?: Partial<Options>): Promise<void> {
+export async function renderDocument(document: WordDocument, bodyContainer: HTMLElement, styleContainer?: HTMLElement, userOptions?: Partial<Options>): Promise<CleanupFn> {
     const ops = { ...defaultOptions, ...userOptions };
     const renderer = new HtmlRenderer(window.document);
     return await renderer.render(document, bodyContainer, styleContainer, ops);
 }
 
-export async function renderAsync(data: Blob | any, bodyContainer: HTMLElement, styleContainer?: HTMLElement, userOptions?: Partial<Options>): Promise<WordDocument> {
+export async function renderAsync(data: Blob | any, bodyContainer: HTMLElement, styleContainer?: HTMLElement, userOptions?: Partial<Options>): Promise<RenderedDocument> {
     const doc = await parseAsync(data, userOptions);
-    await renderDocument(doc, bodyContainer, styleContainer, userOptions);
-    return doc;
+    const cleanup = await renderDocument(doc, bodyContainer, styleContainer, userOptions);
+    return { document: doc, cleanup };
 }
