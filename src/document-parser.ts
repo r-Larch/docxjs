@@ -470,7 +470,7 @@ export class DocumentParser {
 			}
 		}
 
-		if (result.pStyle['margin-inline-start'] && result.pStyle['text-indent'].startsWith('-')) {
+		if (result.pStyle['margin-inline-start'] && result.pStyle['text-indent'] && result.pStyle['text-indent'].startsWith('-')) {
 			const value = result.pStyle['text-indent'].substring(1);
 			result.rStyle['display'] = 'inline-block';
 			result.rStyle['width'] = value;
