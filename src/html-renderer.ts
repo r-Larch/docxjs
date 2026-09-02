@@ -165,7 +165,28 @@ export class HtmlRenderer {
 		const docx = bodyContainer.querySelectorAll<HTMLElement>(`.${this.className}`);
 
 		const updateZoom = () => {
-			docx.forEach(d => d.style.zoom = `${Math.min(1, (wrapper.clientWidth - 60) / d.clientWidth).toFixed(3)}`);
+			// The wrapper's own padding is the gutter around the page, so the space a page may
+			// occupy is its content box — not `clientWidth`, which still includes that padding.
+			const style = getComputedStyle(wrapper);
+			const available = wrapper.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+
+			// Nothing to divide into: the wrapper has not been laid out yet, or an ancestor is
+			// `display: none`. Writing a ratio anyway is worse than writing nothing — it comes out
+			// zero or negative, the browser discards the whole declaration as invalid, and the page
+			// is left at its full width. Keep whatever is on the element and wait for the observer,
+			// which fires again as soon as the wrapper has a size.
+			if (!(available > 0))
+				return;
+
+			docx.forEach(d => {
+				// Unaffected by the element's own zoom, so this stays idempotent across resizes.
+				const pageWidth = d.clientWidth;
+
+				if (!(pageWidth > 0))
+					return;
+
+				d.style.zoom = Math.min(1, available / pageWidth).toFixed(3);
+			});
 		};
 
 		// Initial zoom adjustment
